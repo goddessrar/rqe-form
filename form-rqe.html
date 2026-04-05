@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Formulario RQE</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Poppins', sans-serif;
+  background: transparent;
+  min-height: 100vh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 24px 16px;
+}
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
+.ff-card {
+  background: rgba(233,233,233,0.97);
+  border-radius: 16px;
+  padding: 28px 28px 24px;
+  width: 100%;
+  max-width: 580px;
+  border: 1px solid rgba(40,75,93,0.12);
+}
+.ff-progress {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: #698695;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(40,75,93,0.1);
+}
+.ff-progress-bar {
+  width: 140px; height: 6px;
+  background: rgba(40,75,93,0.12);
+  border-radius: 3px; overflow: hidden;
+}
+.ff-progress-fill {
+  height: 100%;
+  background: #284B5D;
+  transition: width 0.3s ease;
+}
+.ff-title {
+  font-size: 20px; font-weight: 600;
+  color: #1D292E; margin-bottom: 6px; line-height: 1.3;
+}
+.ff-desc {
+  font-size: 13px; color: #698695;
+  margin-bottom: 20px; line-height: 1.5;
+}
+.ff-options { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+.ff-option {
+  width: 100%; padding: 12px 18px;
+  border-radius: 10px; border: 1.5px solid rgba(40,75,93,0.18);
+  background: #fff; color: #1D292E;
+  text-align: left; cursor: pointer;
+  font-size: 14px; font-family: 'Poppins', sans-serif;
+  transition: all 0.2s; line-height: 1.4;
+}
+.ff-option:hover { border-color: #284B5D; background: #EEF2F4; }
+.ff-option.selected {
+  border-color: #284B5D; background: #284B5D;
+  color: #fff; font-weight: 500;
+}
+.ff-textarea {
+  width: 100%; padding: 14px 16px;
+  border-radius: 10px; border: 1.5px solid rgba(40,75,93,0.18);
+  background: #fff; color: #1D292E;
+  font-size: 14px; font-family: 'Poppins', sans-serif;
+  min-height: 110px; resize: vertical;
+  margin-bottom: 20px; outline: none;
+}
+.ff-textarea:focus { border-color: #284B5D; }
+.ff-nav { display: flex; justify-content: space-between; gap: 12px; }
+.ff-btn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 22px; border-radius: 999px;
+  font-size: 14px; font-family: 'Poppins', sans-serif;
+  font-weight: 500; cursor: pointer; transition: all 0.2s; border: none;
+}
+.ff-btn-prev {
+  background: transparent; color: #698695;
+  border: 1.5px solid rgba(40,75,93,0.2);
+}
+.ff-btn-prev:hover:not(:disabled) { border-color: #284B5D; color: #284B5D; }
+.ff-btn-next { background: #284B5D; color: #fff; }
+.ff-btn-next:hover:not(:disabled) { background: #1D292E; }
+.ff-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.ff-success {
+  text-align: center; padding: 20px 0 8px;
+}
+.ff-success-icon {
+  width: 64px; height: 64px;
+  background: rgba(40,75,93,0.1); border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 20px;
+}
+.ff-success h2 { font-size: 22px; color: #1D292E; margin-bottom: 10px; }
+.ff-success p { color: #698695; font-size: 14px; line-height: 1.6; }
+.ff-success-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 14px 32px; background: #284B5D; color: #fff;
+  font-size: 15px; font-weight: 600; border: none;
+  border-radius: 999px; cursor: pointer; margin-top: 24px;
+  font-family: 'Poppins', sans-serif; transition: background 0.2s;
+}
+.ff-success-btn:hover { background: #1D292E; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+.ff-animate { animation: fadeIn 0.25s ease-out; }
+</style>
+</head>
+<body>
+<div id="ff-form"></div>
+<script>
+(function(){
+const SUPABASE_URL='https://hvztflxjrhtmpfnoypha.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2enRmbHhqcmh0bXBmbm95cGhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3MzkzMDcsImV4cCI6MjA3OTMxNTMwN30.7yNqGcFd89GfOjTNKp2VTQljLhZlcn4h-9J83LSykeg';
+const FORM_ID='05c800bb-2d5e-4168-829d-9375e53c4eb9';
+const WA_NUM='12069664729';
+const QUESTIONS=[{id:'q0',title:'¿Cuál es tu profesión o área de trabajo?',desc:'Queremos entender si hoy ya acompañas procesos de otras personas desde un rol profesional.',opts:[{l:'Terapeuta (psicólogo, psicoterapeuta, etc.)',s:100},{l:'Coach (vida, ejecutivo, transformacional)',s:100},{l:'Médico o profesional de la salud',s:95},{l:'Consultor o asesor empresarial',s:75},{l:'Emprendedor/Empresario',s:65},{l:'Otro',s:35}]},{id:'q1',title:'¿Cuál de estas frases describe mejor tu situación actual?',desc:'Buscamos entender si estás en un momento real de búsqueda, transformación y profundidad.',opts:[{l:'Soy funcional profesionalmente, pero siento que hay algo que no cierra en mi vida o en mi trabajo',s:85},{l:'Tengo clientes/pacientes pero siento que mis intervenciones alivian pero no transforman',s:100},{l:'Busco un método estructurado para entender cómo funciona mi mente y mi percepción',s:90},{l:'Quiero aprender a ser terapeuta con un método estructurado para acompañar procesos de otras personas',s:100},{l:'Ninguna de las anteriores',s:0}]},{id:'q2',title:'¿Cuándo te gustaría comenzar la Diplomatura?',desc:'Esto nos ayuda a medir tu nivel de urgencia y disposición real para iniciar el proceso.',opts:[{l:'Inmediatamente',s:100},{l:'En 2-3 meses',s:60},{l:'Aún estoy explorando opciones',s:10}]},{id:'q3',title:'La Diplomatura requiere una inversión de tiempo, energía y recursos económicos. ¿Cuál describe mejor tu momento?',desc:'Queremos conocer tu disposición para invertir en un proceso profundo si tiene sentido para vos.',opts:[{l:'Estoy buscando activamente una transformación real y estoy dispuesto/a a invertir en un proceso profundo si es el indicado para mí.',s:100},{l:'Tengo interés pero necesito comprender bien el valor y los detalles antes de considerar una inversión.',s:65},{l:'En este momento solo estoy explorando opciones y no tengo previsto hacer una inversión importante.',s:10}]},{id:'q4',title:'¿Qué es lo que más te atrae de la Diplomatura RP?',desc:'Cuéntanos brevemente qué estás buscando. Esto nos ayuda a personalizar mejor la conversación.',type:'text'},{id:'q5',title:'Aceptación de términos y condiciones',desc:'La entrevista de admisión con Francisco Sola solo se confirmará si respondes el WhatsApp y las llamadas con el equipo del Instituto RQE.',opts:[{l:'ACEPTO',s:100},{l:'NO ACEPTO',s:0}]}];
+let step=0,responses={},texts={},processing=false;
+const container=document.getElementById('ff-form');
+function esc(s){return s?String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'):''}
+function render(){step>=QUESTIONS.length?renderSuccess():renderStep()}
+function renderStep(){
+  const q=QUESTIONS[step];
+  const prog=Math.round(((step+1)/QUESTIONS.length)*100);
+  const isLast=step===QUESTIONS.length-1;
+  const isText=q.type==='text';
+  let body='';
+  if(isText){
+    body='<textarea class="ff-textarea" placeholder="Tu respuesta...">'+esc(texts[q.id]||'')+'</textarea>';
+  } else {
+    body='<div class="ff-options">'+q.opts.map(o=>'<button class="ff-option'+(responses[q.id]===o.l?' selected':'')+'" data-l="'+esc(o.l)+'" data-s="'+o.s+'">'+esc(o.l)+'</button>').join('')+'</div>';
+  }
+  const nav='<div class="ff-nav">'+(step>0?'<button class="ff-btn ff-btn-prev">← Anterior</button>':'<span></span>')+'<button class="ff-btn ff-btn-next">'+(isLast?'Enviar →':'Siguiente →')+'</button></div>';
+  container.innerHTML='<div class="ff-card ff-animate"><div class="ff-progress"><span>Paso '+(step+1)+' de '+QUESTIONS.length+'</span><div class="ff-progress-bar"><div class="ff-progress-fill" style="width:'+prog+'%"></div></div></div><h2 class="ff-title">'+esc(q.title)+'</h2>'+(q.desc?'<p class="ff-desc">'+esc(q.desc)+'</p>':'')+body+nav+'</div>';
+  container.querySelectorAll('.ff-option').forEach(btn=>{
+    btn.addEventListener('click',function(){
+      responses[q.id]=this.dataset.l;
+      container.querySelectorAll('.ff-option').forEach(b=>b.classList.remove('selected'));
+      this.classList.add('selected');
+      if(!isText&&!isLast){setTimeout(()=>{step++;render();},220);}
+    });
+  });
+  const ta=container.querySelector('.ff-textarea');
+  if(ta)ta.addEventListener('input',function(){texts[q.id]=this.value;});
+  const prev=container.querySelector('.ff-btn-prev');
+  if(prev)prev.addEventListener('click',()=>{step--;render();});
+  const next=container.querySelector('.ff-btn-next');
+  if(next)next.addEventListener('click',()=>{
+    if(isText){if(!(texts[q.id]||'').trim())return;responses[q.id]=texts[q.id].trim();}
+    if(!responses[q.id])return;
+    if(isLast){submit();}else{step++;render();}
+  });
+}
+function submit(){
+  if(processing)return;processing=true;
+  const arr=QUESTIONS.map(q=>({questionId:q.id,answer:responses[q.id]||'',score:q.opts?((q.opts.find(o=>o.l===responses[q.id])||{}).s||0):10}));
+  const total=arr.reduce((s,r)=>s+r.score,0);
+  fetch(SUPABASE_URL+'/functions/v1/submit-form',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPABASE_KEY},body:JSON.stringify({formId:FORM_ID,responses:arr,totalScore:total})}).catch(()=>{});
+  const msg=encodeURIComponent('Hola, completé el formulario de preinscripción a la Diplomatura en Reprogramación de la Percepción.');
+  renderSuccess('https://wa.me/'+WA_NUM+'?text='+msg);
+}
+function renderSuccess(waUrl){
+  container.innerHTML='<div class="ff-card ff-animate"><div class="ff-success"><div class="ff-success-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#284B5D" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg></div><h2>¡Gracias por tu respuesta!</h2><p>Hemos recibido tu información correctamente.</p>'+(waUrl?'<button class="ff-success-btn" onclick="window.open(\''+waUrl+'\',\'_blank\')">💬 Continuar por WhatsApp</button>':'')+'</div></div>';
+}
+render();
+})();
+</script>
+</body>
+</html>
