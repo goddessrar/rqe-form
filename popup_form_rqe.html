@@ -1,0 +1,246 @@
+<script>
+(function() {
+
+  // ── Popup solo en páginas con botones "Inscribirme ahora" ──────────────────
+  // Excluye /mentoria aunque tenga el mismo texto de botón
+  const EXCLUDED_PATHS = ['/mentoria'];
+  const path = window.location.pathname;
+  if (EXCLUDED_PATHS.some(function(p) { return path.includes(p); })) return;
+
+  // ── Estilos del popup ──────────────────────────────────────────────────────
+  const style = document.createElement('style');
+  style.textContent = `
+    #rqe-overlay {
+      position:fixed;inset:0;z-index:99998;
+      background:rgba(29,41,46,0.75);
+      backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+      display:flex;align-items:center;justify-content:center;
+      padding:24px;box-sizing:border-box;
+      opacity:0;transition:opacity 0.3s ease;pointer-events:none;
+    }
+    #rqe-overlay.open{opacity:1;pointer-events:auto;}
+    #rqe-modal {
+      background:#e9e9e9;border-radius:20px;
+      width:100%;max-width:600px;max-height:90vh;overflow-y:auto;
+      position:relative;
+      transform:translateY(24px);
+      transition:transform 0.35s cubic-bezier(0.34,1.2,0.64,1);
+    }
+    #rqe-overlay.open #rqe-modal{transform:translateY(0);}
+    #rqe-close {
+      position:absolute;top:14px;right:14px;z-index:2;
+      width:32px;height:32px;border-radius:50%;
+      background:rgba(40,75,93,0.1);border:none;
+      display:flex;align-items:center;justify-content:center;
+      cursor:pointer;transition:background 0.2s;
+    }
+    #rqe-close:hover{background:rgba(40,75,93,0.2);}
+    #ff-wrapper-05c800bb-2d5e-4168-829d-9375e53c4eb9{background:transparent!important;padding:32px!important;}
+    #ff-form-05c800bb-2d5e-4168-829d-9375e53c4eb9 .ff-card{background:#e9e9e9!important;border:none!important;padding:0!important;}
+    #ff-form-05c800bb-2d5e-4168-829d-9375e53c4eb9 .ff-title{color:#1D292E!important;font-family:'Poppins',sans-serif!important;}
+    #ff-form-05c800bb-2d5e-4168-829d-9375e53c4eb9 .ff-desc{color:#698695!important;font-family:'Poppins',sans-serif!important;}
+    #ff-form-05c800bb-2d5e-4168-829d-9375e53c4eb9 .ff-progress{border-color:rgba(40,75,93,0.15)!important;color:#698695!important;}
+    #ff-form-05c800bb-2d5e-4168-829d-9375e53c4eb9 .ff-progress-bar{background:#D4DCE0!important;}
+    #ff-form-05c800bb-2d5e-4168-829d-9375e53c4eb9 .ff-progress-fill{background:#284B5D!important;}
+    #ff-form-05c800bb-2d5e-4168-829d-9375e53c4eb9 .ff-option{background:#fff!important;border-color:#D4DCE0!important;color:#1D292E!important;font-family:'Poppins',sans-serif!important;}
+    #ff-form-05c800bb-2d5e-4168-829d-9375e53c4eb9 .ff-option:hover{border-color:#284B5D!important;background:#EEF2F4!important;}
+    #ff-form-05c800bb-2d5e-4168-829d-9375e53c4eb9 .ff-option.selected{background:#284B5D!important;border-color:#284B5D!important;color:#fff!important;}
+    #ff-form-05c800bb-2d5e-4168-829d-9375e53c4eb9 .ff-input{background:#fff!important;border-color:#D4DCE0!important;color:#1D292E!important;font-family:'Poppins',sans-serif!important;}
+    #ff-form-05c800bb-2d5e-4168-829d-9375e53c4eb9 .ff-input:focus{border-color:#284B5D!important;}
+    #ff-form-05c800bb-2d5e-4168-829d-9375e53c4eb9 .ff-btn-next{background:#284B5D!important;font-family:'Poppins',sans-serif!important;box-shadow:none!important;}
+    #ff-form-05c800bb-2d5e-4168-829d-9375e53c4eb9 .ff-btn-next:hover:not(:disabled){background:#1D292E!important;transform:none!important;}
+    #ff-form-05c800bb-2d5e-4168-829d-9375e53c4eb9 .ff-btn-prev{color:#698695!important;border-color:#D4DCE0!important;font-family:'Poppins',sans-serif!important;}
+    #ff-form-05c800bb-2d5e-4168-829d-9375e53c4eb9 *{font-family:'Poppins',sans-serif!important;}
+    @media(max-width:640px){
+      #rqe-modal{border-radius:16px;max-height:95vh;}
+      #ff-wrapper-05c800bb-2d5e-4168-829d-9375e53c4eb9{padding:20px!important;}
+    }
+  `;
+  document.head.appendChild(style);
+
+  // ── DOM del popup ──────────────────────────────────────────────────────────
+  const overlay = document.createElement('div');
+  overlay.id = 'rqe-overlay';
+  overlay.innerHTML = '<div id="rqe-modal">' +
+    '<button id="rqe-close" aria-label="Cerrar">' +
+    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#284B5D" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>' +
+    '</button>' +
+    '<div id="ff-wrapper-05c800bb-2d5e-4168-829d-9375e53c4eb9">' +
+    '<div id="ff-form-05c800bb-2d5e-4168-829d-9375e53c4eb9"></div>' +
+    '</div></div>';
+  document.body.appendChild(overlay);
+
+  // ── Abrir / cerrar ─────────────────────────────────────────────────────────
+  var formLoaded = false;
+  function openPopup() {
+    if (!formLoaded) { formLoaded = true; runForm(); }
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closePopup() {
+    overlay.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  document.getElementById('rqe-close').addEventListener('click', closePopup);
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) closePopup(); });
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closePopup(); });
+
+  // ── Interceptar clicks en "Inscribirme ahora" (excluye sticky) ────────────
+  function attachListeners() {
+    document.querySelectorAll('a, button').forEach(function(el) {
+      if (el.dataset.rqePopup) return;
+      if (el.id === 'sticky-cta-btn') return;
+      if (el.closest('#sticky-bar')) return;
+      var text = el.textContent.trim().toLowerCase();
+      if (text === 'inscribirme ahora' || text === 'inscribirme') {
+        el.dataset.rqePopup = '1';
+        el.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          openPopup();
+        });
+      }
+    });
+  }
+  attachListeners();
+  new MutationObserver(attachListeners).observe(document.body, { childList: true, subtree: true });
+
+  // ── Script del formulario con colores RQE ──────────────────────────────────
+  function runForm() {
+    var FORM_ID = '05c800bb-2d5e-4168-829d-9375e53c4eb9';
+    var FORM_CSS_ID = '05c800bb-2d5e-4168-829d-9375e53c4eb9';
+    var FORM_NAME = 'Admisión Diplomatura en Reprogramación de la Percepción';
+    var SUPABASE_URL = 'https://hvztflxjrhtmpfnoypha.supabase.co';
+    var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2enRmbHhqcmh0bXBmbm95cGhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3MzkzMDcsImV4cCI6MjA3OTMxNTMwN30.7yNqGcFd89GfOjTNKp2VTQljLhZlcn4h-9J83LSykeg';
+    var QUESTIONS = [{"id":"q-1774372873036-0","title":"¿Cuál es tu profesión o área de trabajo?","description":"Queremos entender si hoy ya acompañas procesos de otras personas desde un rol profesional.","type":"multiple-choice","required":true,"options":[{"id":"opt-1774372873036-0-0","label":"Terapeuta (psicólogo, psicoterapeuta, etc.)","score":100},{"id":"opt-1774372873036-0-1","label":"Coach (vida, ejecutivo, transformacional)","score":100},{"id":"opt-1774372873036-0-2","label":"Médico o profesional de la salud","score":95},{"id":"opt-1774372873036-0-3","label":"Consultor o asesor empresarial","score":75},{"id":"opt-1774372873036-0-4","label":"Emprendedor/Empresario","score":65},{"id":"opt-1774372873036-0-5","label":"Otro","score":35}],"allowOther":false},{"id":"q-1774372873036-1","title":"¿Cuál de estas frases describe mejor tu situación actual?","description":"Buscamos entender si estás en un momento real de búsqueda, transformación y profundidad.","type":"multiple-choice","required":true,"options":[{"id":"opt-1774372873036-1-0","label":"Soy funcional profesionalmente, pero siento que hay algo que no cierra en mi vida o en mi trabajo","score":85},{"id":"opt-1774372873036-1-1","label":"Tengo clientes/pacientes pero siento que mis intervenciones alivian pero no transforman","score":100},{"id":"opt-1774372873036-1-2","label":"Busco un método estructurado para entender cómo funciona mi mente y mi percepción","score":90},{"id":"opt-1774372873036-1-3","label":"Quiero aprender a ser terapeuta con un método estructurado para acompañar procesos de otras personas","score":100},{"id":"opt-1774372873036-1-4","label":"Ninguna de las anteriores","score":0}],"allowOther":false},{"id":"q-1774372873036-2","title":"¿Cuándo te gustaría comenzar la Diplomatura?","description":"Esto nos ayuda a medir tu nivel de urgencia y disposición real para iniciar el proceso.","type":"multiple-choice","required":true,"options":[{"id":"opt-1774372873036-2-0","label":"Inmediatamente","score":100},{"id":"opt-1774372873036-2-1","label":"En 2-3 meses","score":60},{"id":"opt-1774372873036-2-2","label":"Aún estoy explorando opciones","score":10}],"allowOther":false},{"id":"q-1774372873036-3","title":"La Diplomatura en Reprogramación de la Percepción es un proceso de 7 meses que requiere una inversión de tiempo, energía y recursos económicos. ¿Cuál de estas frases describe mejor tu momento actual?","description":"Queremos conocer tu disposición para invertir en un proceso profundo si tiene sentido para vos.","type":"multiple-choice","required":true,"options":[{"id":"opt-1774372873036-3-0","label":"Estoy buscando activamente una transformación real y estoy dispuesto/a a invertir en un proceso profundo si es el indicado para mí.","score":100},{"id":"opt-1774372873036-3-1","label":"Tengo interés en entender cómo funciona la Reprogramación de la Percepción, pero necesito comprender bien el valor y los detalles antes de considerar una inversión.","score":65},{"id":"opt-1774372873036-3-2","label":"En este momento solo estoy explorando opciones y no tengo previsto hacer una inversión importante en mi formación.","score":10}],"allowOther":false},{"id":"q-1774372873036-4","title":"¿Qué es lo que más te atrae de la Diplomatura RP?","description":"Cuéntanos brevemente qué estás buscando. Esto nos ayuda a personalizar mejor la conversación.","type":"long-text","required":true,"options":[],"allowOther":false},{"id":"q-1774372873036-5","title":"Aceptación de términos y condiciones","description":"La entrevista de admisión con Francisco Sola solo se confirmará si respondes el WhatsApp y las llamadas con el equipo del Instituto RQE.","type":"multiple-choice","required":true,"options":[{"id":"opt-1774372873036-5-0","label":"ACEPTO","score":100},{"id":"opt-1774372873036-5-1","label":"NO ACEPTO","score":0}],"allowOther":false}];
+    var TRACKING = {};
+    var T = {"step":"Paso","of":"de","previous":"Anterior","next":"Siguiente","submit":"Enviar","processing":"Procesando...","yourAnswer":"Tu respuesta...","emailPlaceholder":"tu@email.com","instagramPlaceholder":"@tu_usuario o https://instagram.com/tu_usuario","whatsappPlaceholder":"+54 9 11 1234-5678","thankYou":"¡Gracias por tu respuesta!\n\nHemos recibido tu información correctamente","ctaText":"Ir al siguiente paso","invalidEmail":"Ingresa un email válido","invalidPhone":"Ingresa un número de teléfono válido (solo números)","redirecting":"Redirigiendo...","redirectingMessage":"Por favor espera, te estamos redirigiendo","otherOption":"Otra","otherPlaceholder":"Especifica tu respuesta..."};
+    var SUCCESS_CONFIG = {"redirectType":"whatsapp","redirectUrl":"","whatsappNumber":"+1 (206) 966-4729","whatsappMessage":"","includeResponsesInWhatsapp":true,"successMessage":"¡Gracias por tu respuesta!\n\nHemos recibido tu información correctamente","ctaText":"Ir al siguiente paso","skipThankYouPage":true,"conditionalRedirects":[],"vslConfig":null};
+    var SCORE_THRESHOLDS = { warm: 60, hot: 80 };
+    var STYLES = {
+      primary: '#284B5D',
+      primaryHover: '#1D292E',
+      bg: '#e9e9e9',
+      bgSecondary: '#EEF2F4',
+      cardBg: '#e9e9e9',
+      inputBg: '#ffffff',
+      text: '#1D292E',
+      textSecondary: '#698695',
+      border: 'rgba(40,75,93,0.12)',
+      borderHover: 'rgba(40,75,93,0.25)',
+      radius: '12px',
+      radiusSm: '8px',
+      radiusLg: '16px',
+      font: "'Poppins', system-ui, sans-serif"
+    };
+
+    var currentStep = 0;
+    var responses = {};
+    var textInputs = {};
+    var isProcessing = false;
+    var otherSelected = {};
+    var otherTextInputs = {};
+    var multiSelectAnswers = {};
+    var submissionShortId = '';
+    var metaEventId = (function(){var c='abcdefghijklmnopqrstuvwxyz0123456789',r='';for(var i=0;i<8;i++)r+=c.charAt(Math.floor(Math.random()*c.length));return r;})();
+    var sessionId = 'embed_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+
+    var container = document.getElementById('ff-form-' + FORM_CSS_ID);
+
+    var styleEl = document.createElement('style');
+    styleEl.textContent = '#ff-wrapper-'+FORM_CSS_ID+'{background:transparent;min-height:100%;padding:24px;box-sizing:border-box;}#ff-form-'+FORM_CSS_ID+'{font-family:'+STYLES.font+';color:'+STYLES.text+';border-radius:'+STYLES.radiusLg+';width:100%;box-sizing:border-box;}#ff-form-'+FORM_CSS_ID+' *{box-sizing:border-box;}#ff-form-'+FORM_CSS_ID+' .ff-card{background:'+STYLES.cardBg+';border-radius:'+STYLES.radiusLg+';padding:24px;border:1px solid '+STYLES.border+';}#ff-form-'+FORM_CSS_ID+' .ff-progress{display:flex;justify-content:space-between;align-items:center;font-size:14px;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid '+STYLES.border+';}#ff-form-'+FORM_CSS_ID+' .ff-progress-bar{width:160px;height:8px;background:'+STYLES.inputBg+';border-radius:4px;overflow:hidden;}#ff-form-'+FORM_CSS_ID+' .ff-progress-fill{height:100%;background:'+STYLES.primary+';transition:width 0.3s ease;}#ff-form-'+FORM_CSS_ID+' .ff-title{font-size:24px;font-weight:bold;margin:0 0 8px 0;color:'+STYLES.text+';}#ff-form-'+FORM_CSS_ID+' .ff-desc{color:'+STYLES.textSecondary+';margin:0 0 16px 0;}#ff-form-'+FORM_CSS_ID+' .ff-options{display:flex;flex-direction:column;gap:12px;margin-bottom:24px;}#ff-form-'+FORM_CSS_ID+' .ff-option{width:100%;padding:12px 20px;border-radius:'+STYLES.radiusSm+';border:2px solid '+STYLES.border+';background:'+STYLES.bg+';color:'+STYLES.text+';text-align:left;cursor:pointer;font-size:16px;font-family:inherit;transition:all 0.2s ease;}#ff-form-'+FORM_CSS_ID+' .ff-option:hover{border-color:'+STYLES.primary+';background:'+STYLES.inputBg+';}#ff-form-'+FORM_CSS_ID+' .ff-option.selected{border-color:'+STYLES.primary+';background:'+STYLES.primary+';color:#ffffff;font-weight:600;transform:scale(1.02);}#ff-form-'+FORM_CSS_ID+' .ff-input{width:100%;padding:16px;border-radius:'+STYLES.radiusSm+';border:2px solid '+STYLES.border+';background:'+STYLES.inputBg+';color:'+STYLES.text+';font-size:18px;font-family:inherit;margin-bottom:24px;}#ff-form-'+FORM_CSS_ID+' .ff-input:focus{outline:none;border-color:'+STYLES.primary+';}#ff-form-'+FORM_CSS_ID+' .ff-textarea{min-height:120px;resize:vertical;}#ff-form-'+FORM_CSS_ID+' .ff-nav{display:flex;justify-content:space-between;gap:16px;}#ff-form-'+FORM_CSS_ID+' .ff-btn{display:flex;align-items:center;gap:8px;padding:10px 20px;border-radius:'+STYLES.radiusSm+';font-size:16px;font-family:inherit;cursor:pointer;transition:all 0.2s ease;border:none;}#ff-form-'+FORM_CSS_ID+' .ff-btn-prev{background:transparent;color:'+STYLES.textSecondary+';border:2px solid '+STYLES.border+';}#ff-form-'+FORM_CSS_ID+' .ff-btn-next{background:'+STYLES.primary+';color:#ffffff;font-weight:600;}#ff-form-'+FORM_CSS_ID+' .ff-btn-next:hover:not(:disabled){background:'+STYLES.primaryHover+';}#ff-form-'+FORM_CSS_ID+' .ff-btn:disabled{opacity:0.5;cursor:not-allowed;}#ff-form-'+FORM_CSS_ID+' .ff-success{text-align:center;padding:40px 20px;}#ff-form-'+FORM_CSS_ID+' .ff-success h2{font-size:28px;font-weight:bold;margin:0 0 16px 0;}#ff-form-'+FORM_CSS_ID+' .ff-success-btn{display:inline-flex;align-items:center;gap:8px;padding:16px 32px;background:'+STYLES.primary+';color:#ffffff;font-size:18px;font-weight:600;border:none;border-radius:'+STYLES.radiusSm+';cursor:pointer;margin-top:24px;}#ff-form-'+FORM_CSS_ID+' .ff-redirecting{text-align:center;padding:40px 20px;}#ff-form-'+FORM_CSS_ID+' .ff-redirecting-icon{width:64px;height:64px;background:'+STYLES.primary+';border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 24px;}#ff-form-'+FORM_CSS_ID+' .ff-redirecting-icon svg{width:32px;height:32px;color:#ffffff;animation:ff-spin 1s linear infinite;}@keyframes ff-spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}@keyframes ff-fade-in{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}#ff-form-'+FORM_CSS_ID+' .ff-animate{animation:ff-fade-in 0.3s ease-out;}@media(max-width:640px){#ff-form-'+FORM_CSS_ID+' .ff-card{padding:8px;border:none;}#ff-form-'+FORM_CSS_ID+' .ff-title{font-size:20px;}#ff-form-'+FORM_CSS_ID+' .ff-nav{flex-direction:column-reverse;gap:12px;}#ff-form-'+FORM_CSS_ID+' .ff-btn{width:100%;justify-content:center;}}';
+    document.head.appendChild(styleEl);
+
+    function getCookie(name){var m=document.cookie.match(new RegExp('(^| )'+name+'=([^;]+)'));return m?decodeURIComponent(m[2]):null;}
+    function getMetaAttribution(){var p=new URLSearchParams(window.location.search),fbclid=p.get('fbclid'),fbc=fbclid?'fb.1.'+Date.now()+'.'+fbclid:getCookie('_fbc'),fbp=getCookie('_fbp');return{fbc:fbc,fbp:fbp,external_id:sessionId};}
+    function generateMetaEventId(){var c='abcdefghijklmnopqrstuvwxyz0123456789',r='';for(var i=0;i<8;i++)r+=c.charAt(Math.floor(Math.random()*c.length));return r;}
+    function trackEvent(n,p){if(TRACKING.googleAnalyticsId&&window.gtag)gtag('event',n,p);if(TRACKING.googleTagManagerId&&window.dataLayer)dataLayer.push(Object.assign({event:n},p));}
+    function saveEventToDb(t,s){try{fetch(SUPABASE_URL+'/rest/v1/form_events',{method:'POST',headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Prefer':'return=minimal'},body:JSON.stringify({form_id:FORM_ID,event_type:t,step_number:s||null,session_id:sessionId,form_version:2})});}catch(e){}}
+    function trackLeadTemperature(score){var t=score<SCORE_THRESHOLDS.warm?'cold':score<SCORE_THRESHOLDS.hot?'warm':'hot',n=t==='cold'?'LeadCold':t==='warm'?'LeadWarm':'LeadHot';trackEvent(n,{total_score:score});}
+    function escapeHtml(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+    function validateEmail(e){return/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim());}
+    function validatePhone(p){return/^\d{8,15}$/.test(p.replace(/[\s\-\(\)\+]/g,''));}
+
+    trackEvent('Form_Load',{form_id:FORM_ID,form_name:FORM_NAME});
+    saveEventToDb('form_load');
+
+    function render(){if(currentStep>=QUESTIONS.length){renderSuccess();return;}renderQuestion();}
+
+    function renderQuestion(){
+      var q=QUESTIONS[currentStep],progress=((currentStep+1)/QUESTIONS.length)*100,isLast=currentStep===QUESTIONS.length-1,isMC=q.type==='multiple-choice',hasOther=q.allowOther&&isMC,autoAdvance=isMC&&!hasOther;
+      var optHtml='';
+      if(isMC&&q.options){
+        optHtml='<div class="ff-options">'+q.options.map(function(opt){var sel=responses[q.id]&&responses[q.id].answer===opt.label?'selected':'';return'<button class="ff-option '+sel+'" data-label="'+escapeHtml(opt.label)+'" data-score="'+opt.score+'">'+escapeHtml(opt.label)+'</button>';}).join('')+'</div>';
+      } else if(q.type==='long-text'){
+        optHtml='<textarea class="ff-input ff-textarea" placeholder="'+T.yourAnswer+'">'+escapeHtml(textInputs[q.id]||'')+'</textarea>';
+      } else {
+        optHtml='<div class="ff-input-wrap"><input type="text" class="ff-input" placeholder="'+T.yourAnswer+'" value="'+escapeHtml(textInputs[q.id]||'')+'"><div class="ff-error" style="display:none;color:#ef4444;font-size:14px;margin-top:8px;"></div></div>';
+      }
+      var navHtml=autoAdvance&&!isLast?'':'<div class="ff-nav"><button class="ff-btn ff-btn-prev"'+(currentStep===0?' disabled':'')+'>← '+T.previous+'</button><button class="ff-btn ff-btn-next">'+(isLast?T.submit:T.next)+' →</button></div>';
+      container.innerHTML='<div class="ff-card ff-animate"><div class="ff-progress"><span>'+T.step+' '+(currentStep+1)+' '+T.of+' '+QUESTIONS.length+'</span><div class="ff-progress-bar"><div class="ff-progress-fill" style="width:'+progress+'%"></div></div></div><h2 class="ff-title">'+escapeHtml(q.title)+'</h2>'+(q.description?'<p class="ff-desc">'+escapeHtml(q.description)+'</p>':'')+optHtml+navHtml+'</div>';
+      trackEvent('Form_Step',{form_id:FORM_ID,step:currentStep+1});
+      saveEventToDb('step_complete',currentStep+1);
+      bindEvents();
+    }
+
+    function bindEvents(){
+      var q=QUESTIONS[currentStep],isMC=q.type==='multiple-choice',hasOther=q.allowOther&&isMC,autoAdvance=isMC&&!hasOther;
+      if(isMC){
+        container.querySelectorAll('.ff-option').forEach(function(btn){
+          btn.addEventListener('click',function(){
+            var label=this.dataset.label,score=parseInt(this.dataset.score)||0;
+            responses[q.id]={questionId:q.id,answer:label,score:score};
+            if(autoAdvance){container.querySelectorAll('.ff-option').forEach(function(o){o.classList.remove('selected');});this.classList.add('selected');setTimeout(function(){currentStep++;render();},200);}
+            else{render();}
+          });
+        });
+      }
+      var input=container.querySelector('.ff-input');
+      if(input){input.addEventListener('input',function(){textInputs[q.id]=this.value;});input.addEventListener('keypress',function(e){if(e.key==='Enter'&&!e.shiftKey&&this.tagName!=='TEXTAREA'){e.preventDefault();handleNext();}});}
+      var prevBtn=container.querySelector('.ff-btn-prev'),nextBtn=container.querySelector('.ff-btn-next');
+      if(prevBtn)prevBtn.addEventListener('click',function(){if(currentStep>0){currentStep--;render();}});
+      if(nextBtn)nextBtn.addEventListener('click',handleNext);
+    }
+
+    function handleNext(){
+      var q=QUESTIONS[currentStep];
+      if(['short-text','long-text','email','lead-capture'].includes(q.type)){
+        var val=textInputs[q.id]||'';
+        if(val.trim())responses[q.id]={questionId:q.id,answer:val.trim(),score:10};
+        else if(q.required)return;
+      }
+      if(q.required&&!responses[q.id])return;
+      currentStep++;render();
+    }
+
+    function renderSuccess(){
+      function normalizeWANum(n){var d=n.replace(/\D/g,'');if(!d)return'';if(d.startsWith('54'))d=d.substring(2);if(d.startsWith('9'))d=d.substring(1);if(d.startsWith('0'))d=d.substring(1);return'549'+d;}
+      var totalScore=Object.values(responses).reduce(function(s,r){return s+(r.score||0);},0);
+      trackEvent('Form_Finish',{form_id:FORM_ID,total_score:totalScore});
+      saveEventToDb('form_submit');
+      trackLeadTemperature(totalScore);
+      var finalMessage=SUCCESS_CONFIG.whatsappMessage||formatWhatsAppMessage();
+      if(SUCCESS_CONFIG.whatsappMessage&&SUCCESS_CONFIG.includeResponsesInWhatsapp)finalMessage+=formatResponsesList();
+      var num=normalizeWANum(SUCCESS_CONFIG.whatsappNumber);
+      var ctaUrl='https://wa.me/'+num+'?text='+encodeURIComponent(finalMessage);
+      container.innerHTML='<div class="ff-card ff-animate"><div class="ff-redirecting"><div class="ff-redirecting-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg></div><h2>'+escapeHtml(T.redirecting)+'</h2><p>'+escapeHtml(T.redirectingMessage)+'</p></div></div>';
+      submitToBackend().then(function(){
+        setTimeout(function(){
+          try{var w=window.open(ctaUrl,'_blank','noopener,noreferrer');if(!w||w.closed)window.location.href=ctaUrl;}catch(e){window.location.href=ctaUrl;}
+        },500);
+      });
+    }
+
+    function formatWhatsAppMessage(){var msg='📋 Respuestas del formulario:\n\n';QUESTIONS.forEach(function(q){var r=responses[q.id];if(r)msg+='• '+q.title+': '+r.answer+'\n';});if(submissionShortId)msg+='\n🆔 ID: '+submissionShortId;return msg;}
+    function formatResponsesList(){var msg='\n\n📋 *Respuestas:*\n';QUESTIONS.forEach(function(q){var r=responses[q.id];if(r)msg+='• '+q.title+': '+r.answer+'\n';});if(submissionShortId)msg+='\n🆔 ID: '+submissionShortId;return msg;}
+
+    async function submitToBackend(){
+      var arr=Object.values(responses),total=arr.reduce(function(s,r){return s+(r.score||0);},0);
+      try{var res=await fetch(SUPABASE_URL+'/functions/v1/submit-form',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPABASE_KEY},body:JSON.stringify({formId:FORM_ID,responses:arr,totalScore:total,metaEventId:metaEventId,deviceInfo:{userAgent:navigator.userAgent,language:navigator.language}})});if(res.ok){var d=await res.json();if(d.shortId)submissionShortId=d.shortId;}}catch(e){console.error('Form submit error:',e);}
+    }
+
+    render();
+  }
+
+})();
+</script>
