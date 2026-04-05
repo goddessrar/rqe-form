@@ -46,7 +46,15 @@
   
   const styleEl = document.createElement('style');
   styleEl.textContent = `
-    #ff-wrapper-${FORM_CSS_ID} { background: transparent; padding: 10px; box-sizing: border-box; display: flex; justify-content: center; align-items: flex-start; }
+    #ff-wrapper-${FORM_CSS_ID} { 
+      background: transparent; 
+      padding: 10px; 
+      box-sizing: border-box; 
+      display: flex; 
+      justify-content: center; 
+      align-items: flex-start;
+      width: 100%;
+    }
     .ff-card { 
       background: ${STYLES.cardBg}; 
       border-radius: ${STYLES.radiusLg}; 
@@ -56,17 +64,25 @@
       border: 1px solid ${STYLES.border}; 
       box-shadow: 0 10px 25px rgba(0,0,0,0.03); 
       font-family: ${STYLES.font}; 
-      margin-top: 5px;
+      margin: 5px auto;
+      box-sizing: border-box; /* Previene el desborde por padding */
     }
     .ff-progress-bar { width: 100%; height: 4px; background: #eee; border-radius: 10px; margin-bottom: 20px; overflow: hidden; }
     .ff-progress-fill { height: 100%; background: ${STYLES.primary}; transition: width 0.4s ease; }
     .ff-title { font-size: 21px; font-weight: 700; line-height: 1.2; margin-bottom: 8px; color: ${STYLES.primary}; }
     .ff-desc { color: ${STYLES.textSecondary}; margin-bottom: 20px; font-size: 14px; line-height: 1.4; }
-    .ff-option { width: 100%; padding: 12px 16px; border-radius: ${STYLES.radiusSm}; border: 1.5px solid ${STYLES.border}; background: #fff; color: ${STYLES.text}; text-align: left; cursor: pointer; font-size: 15px; margin-bottom: 8px; transition: all 0.2s; font-family: inherit; }
+    .ff-option { width: 100%; padding: 12px 16px; border-radius: ${STYLES.radiusSm}; border: 1.5px solid ${STYLES.border}; background: #fff; color: ${STYLES.text}; text-align: left; cursor: pointer; font-size: 15px; margin-bottom: 8px; transition: all 0.2s; font-family: inherit; box-sizing: border-box; }
     .ff-option:hover { border-color: ${STYLES.primary}; background: #f8f9fa; }
     .ff-input { width: 100%; padding: 14px; border-radius: ${STYLES.radiusSm}; border: 1.5px solid ${STYLES.border}; background: #fcfcfc; font-size: 15px; font-family: inherit; margin-bottom: 15px; min-height: 100px; resize: none; box-sizing: border-box; }
-    .ff-btn-main { background: ${STYLES.primary}; color: #fff; border: none; padding: 15px 25px; border-radius: ${STYLES.radiusSm}; font-weight: 600; cursor: pointer; width: 100%; font-size: 16px; transition: all 0.2s; }
+    .ff-btn-main { background: ${STYLES.primary}; color: #fff; border: none; padding: 15px 25px; border-radius: ${STYLES.radiusSm}; font-weight: 600; cursor: pointer; width: 100%; font-size: 16px; transition: all 0.2s; box-sizing: border-box; }
     .ff-btn-main:hover { background: ${STYLES.primaryHover}; transform: translateY(-1px); }
+
+    /* Corrección para celulares extra pequeños */
+    @media (max-width: 400px) {
+      .ff-card { padding: 20px 15px; }
+      .ff-title { font-size: 19px; }
+      .ff-desc { font-size: 13px; }
+    }
   `;
   document.head.appendChild(styleEl);
 
