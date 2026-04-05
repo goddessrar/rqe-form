@@ -1,0 +1,101 @@
+<div id="ff-wrapper-b8c54a42-5116-4a5c-a4ba-411ab2e5e427">
+  <div id="ff-form-b8c54a42-5116-4a5c-a4ba-411ab2e5e427"></div>
+</div>
+
+<script>
+(function() {
+  const FORM_ID = 'b8c54a42-5116-4a5c-a4ba-411ab2e5e427';
+  const FORM_CSS_ID = 'b8c54a42-5116-4a5c-a4ba-411ab2e5e427';
+  const SUPABASE_URL = 'https://hvztflxjrhtmpfnoypha.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2enRmbHhqcmh0bXBmbm95cGhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3MzkzMDcsImV4cCI6MjA3OTMxNTMwN30.7yNqGcFd89GfOjTNKp2VTQljLhZlcn4h-9J83LSykeg';
+  
+  const QUESTIONS = [{"id":"q-1766760472771-2","title":"Relación con Un Curso de Milagros","description":"¿Cómo te llevás hoy con UCDM?","type":"multiple-choice","required":true,"options":[{"id":"opt-1766760472771-2-0","label":"📕 No sé bien qué es UCDM","score":30},{"id":"opt-1766760472771-2-1","label":"📖 Lo empecé a leer y no lo entendí / me abrumó","score":55},{"id":"opt-1766760472771-2-2","label":"🌱 Lo leí, lo entiendo más o menos y trato de aplicarlo","score":75},{"id":"opt-1766760472771-2-3","label":"🧡 Lo incorporé profundamente y UCDM es parte central de mi camino espiritual","score":95}],"allowOther":false},{"id":"q-1766760472771-1","title":"Situación personal y terapia","description":"Contame dónde estás hoy en relación a la terapia y el acompañamiento personal.","type":"multiple-choice","required":true,"options":[{"id":"opt-1766760472771-1-0","label":"🧍 No hago terapia","score":40},{"id":"opt-1766760472771-1-1","label":"💬 Estoy en terapia actualmente","score":70},{"id":"opt-1766760472771-1-2","label":"🧑‍⚕️ Soy terapeuta / psicólogo y también hago mi propio proceso","score":85},{"id":"opt-1766760472771-1-3","label":"🧑‍🏫 Acompaño a otros y quiero integrar una mirada más espiritual","score":90}],"allowOther":false},{"id":"q-1766760472771-0","title":"Momento vital / tipo de buscador","description":"¿Qué frase se parece más a lo que estás viviendo hoy?","type":"multiple-choice","required":true,"options":[{"id":"opt-1766760472771-0-0","label":"Mi vida funciona… pero por dentro me siento vacío/a o sin sentido.","score":90},{"id":"opt-1766760472771-0-1","label":"Estoy en plena crisis (duelo, ruptura, cambio fuerte, burnout emocional).","score":90},{"id":"opt-1766760472771-0-2","label":"Escuché de Un Curso de Milagros y siento que puede ser para mí, pero no sé cómo entrar.","score":60},{"id":"opt-1766760472771-0-3","label":"Solo sé que estoy buscando algo más profundo. Todavía no sé bien qué.","score":50}],"allowOther":false},{"id":"q-1766760472771-3","title":"Vínculo con la espiritualidad","description":"Hoy, cuando pensás en espiritualidad, ¿qué te pasa?","type":"multiple-choice","required":true,"options":[{"id":"opt-1766760472771-3-0","label":"Tengo más dudas que certezas, pero algo me llama","score":40},{"id":"opt-1766760472771-3-1","label":"Creo en algo más y estoy empezando a explorar en serio","score":60},{"id":"opt-1766760472771-3-2","label":"Hace rato que estoy en camino y quiero ir más profundo","score":80},{"id":"opt-1766760472771-3-3","label":"La espiritualidad es el eje de mi vida y quiero seguir refinando mi percepción","score":95}],"allowOther":false},{"id":"q-1771803057825","title":"¿Qué estás buscando?","description":"Selecciona el producto o servicio que te interesa.","type":"multiple-choice","required":true,"options":[{"id":"opt-1","label":"📚 Libro Recuerda Quien Eres","score":0},{"id":"opt-2","label":"👩‍💻 Curso Introducción a un Curso de Milagros","score":0},{"id":"opt-1771803144983","label":"🎓 Diplomatura en Reprogramación de la Percepción","score":0},{"id":"opt-1771803149159","label":"🧠 Pack de Consultas 1 a 1 con Fran Sola","score":0}],"allowOther":false},{"id":"q-1771803364709","title":"Inversión en desarrollo personal","description":"Esto nos ayuda a recomendarte la mejor opción.","type":"multiple-choice","required":true,"options":[{"id":"opt-1","label":"No estaba pensando invertir actualmente","score":5},{"id":"opt-2","label":"Entre 50 y 100 U$D (Libro o Curso)","score":10},{"id":"opt-1771803500310","label":"Formación Profesional (Diplomatura)","score":100}],"allowOther":false},{"id":"q-1766768959044","title":"Tu WhatsApp","description":"Para enviarte la información personalizada.","type":"lead-capture","required":true,"options":[],"leadCaptureType":"whatsapp","allowOther":false}];
+
+  const STYLES = {
+    primary: '#284B5D',
+    primaryHover: '#1D292E',
+    bg: '#ffffff',
+    text: '#1D292E',
+    textSecondary: '#64748b',
+    border: 'rgba(0, 0, 0, 0.08)',
+    radiusLg: '20px',
+    radiusSm: '10px',
+    font: "'Poppins', sans-serif"
+  };
+
+  let currentStep = 0;
+  let responses = {};
+  let sessionId = 'session_' + Date.now();
+  const container = document.getElementById('ff-form-' + FORM_CSS_ID);
+  
+  const styleEl = document.createElement('style');
+  styleEl.textContent = `
+    #ff-wrapper-${FORM_CSS_ID} { background: transparent; padding: 10px; box-sizing: border-box; display: flex; justify-content: center; width: 100%; }
+    .ff-card { 
+      background: #fff; 
+      border-radius: ${STYLES.radiusLg}; 
+      padding: 25px 20px; 
+      width: 100%; 
+      max-width: 480px; 
+      border: 1px solid ${STYLES.border}; 
+      box-shadow: 0 10px 25px rgba(0,0,0,0.03); 
+      font-family: ${STYLES.font}; 
+      margin: 5px auto;
+      box-sizing: border-box;
+    }
+    .ff-progress-bar { width: 100%; height: 4px; background: #eee; border-radius: 10px; margin-bottom: 20px; overflow: hidden; }
+    .ff-progress-fill { height: 100%; background: ${STYLES.primary}; transition: width 0.4s ease; }
+    .ff-title { font-size: 20px; font-weight: 700; line-height: 1.2; margin-bottom: 8px; color: ${STYLES.primary}; }
+    .ff-desc { color: ${STYLES.textSecondary}; margin-bottom: 20px; font-size: 14px; line-height: 1.4; }
+    .ff-option { width: 100%; padding: 12px 16px; border-radius: ${STYLES.radiusSm}; border: 1.5px solid ${STYLES.border}; background: #fff; color: ${STYLES.text}; text-align: left; cursor: pointer; font-size: 15px; margin-bottom: 8px; transition: all 0.2s; font-family: inherit; box-sizing: border-box; }
+    .ff-option:hover { border-color: ${STYLES.primary}; background: #f8f9fa; }
+    .ff-input { width: 100%; padding: 14px; border-radius: ${STYLES.radiusSm}; border: 1.5px solid ${STYLES.border}; background: #fcfcfc; font-size: 15px; font-family: inherit; margin-bottom: 15px; box-sizing: border-box; }
+    .ff-btn-main { background: ${STYLES.primary}; color: #fff; border: none; padding: 15px 25px; border-radius: ${STYLES.radiusSm}; font-weight: 600; cursor: pointer; width: 100%; font-size: 16px; transition: all 0.2s; box-sizing: border-box; }
+    @media (max-width: 400px) { .ff-card { padding: 20px 15px; } .ff-title { font-size: 18px; } }
+  `;
+  document.head.appendChild(styleEl);
+
+  function render() {
+    const q = QUESTIONS[currentStep];
+    const isLast = currentStep === QUESTIONS.length - 1;
+    const progress = ((currentStep) / (QUESTIONS.length - 1)) * 100;
+
+    let optionsHtml = '';
+    if (q.type === 'multiple-choice') {
+      optionsHtml = q.options.map(opt => `<button class="ff-option" onclick="handleInput('${opt.label}')">${opt.label}</button>`).join('');
+    } else {
+      optionsHtml = `<input type="tel" id="ff-phone" class="ff-input" placeholder="+54 9 11 ...">
+                     <button class="ff-btn-main" onclick="handleInput(document.getElementById('ff-phone').value)">Enviar y Consultar</button>`;
+    }
+
+    container.innerHTML = `
+      <div class="ff-card">
+        <div class="ff-progress-bar"><div class="ff-progress-fill" style="width:${progress}%"></div></div>
+        <h2 class="ff-title">${q.title}</h2>
+        <p class="ff-desc">${q.description}</p>
+        ${optionsHtml}
+      </div>`;
+  }
+
+  window.handleInput = function(val) {
+    if(!val) return alert("Por favor, completa la respuesta.");
+    responses[QUESTIONS[currentStep].title] = val;
+    if (currentStep < QUESTIONS.length - 1) {
+      currentStep++;
+      render();
+    } else {
+      finish();
+    }
+  };
+
+  function finish() {
+    container.innerHTML = `<div class="ff-card" style="text-align:center"><h2>Redirigiendo...</h2></div>`;
+    let msg = "Hola Fran! Hice el test de nivel y me interesan estos productos:\n\n";
+    for (const [q, a] of Object.entries(responses)) { msg += `*${q}*\n${a}\n\n`; }
+    const waUrl = `https://wa.me/12069664729?text=${encodeURIComponent(msg)}`;
+    setTimeout(() => { window.top.location.href = waUrl; }, 600);
+  }
+
+  render();
+})();
+</script>
